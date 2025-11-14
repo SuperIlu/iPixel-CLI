@@ -5,3 +5,4 @@ crccheck
 blurhash-python
 requests
 libgravatar
+icoextract

@@ -12,6 +12,8 @@ import math
 import blurhash
 import requests
 from libgravatar import Gravatar
+from icoextract import IconExtractor, IconExtractorError
+from PIL import Image
 
 
 class EmojiFormatter(logging.Formatter):
@@ -43,6 +45,22 @@ def setup_logging(use_emojis=True):
     logging.basicConfig(level=logging.INFO, handlers=[handler])
 
 logger = logging.getLogger(__name__)
+
+def send_ico(fname:str, index:int):
+    extractor = IconExtractor(fname)
+    ico_list = extractor.list_group_icons()
+    data = extractor.get_icon(resource_id=ico_list[int(index)][0])
+    img = Image.open(data)
+    size = 32, 32
+    img.thumbnail(size, Image.Resampling.LANCZOS)
+    bytes_io = io.BytesIO()
+    img.save(bytes_io, format='PNG')
+    img_bytes = bytes_io.getvalue()
+    png_hex = img_bytes.hex()
+    checksum = CRC32_checksum(png_hex)
+    size = get_frame_size(png_hex, 8)
+    return bytes.fromhex(f"{get_frame_size('FFFF020000' + size + checksum + '0065' + png_hex, 4)}020000{size}{checksum}0065{png_hex}")
+
 
 def gravatar(email:str):
     g = Gravatar(email)
@@ -133,7 +151,8 @@ COMMANDS = {
     "led_off": led_off,
     "randhash": randhash,
     "loremicon": loremicon,
-    "gravatar":gravatar
+    "gravatar":gravatar,
+    "send_ico": send_ico
 }
 
 # Socket server

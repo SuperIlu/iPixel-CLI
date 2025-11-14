@@ -1,7 +1,12 @@
 # NOTE: SuperIlus extensions
 - added support for fetching random images from https://loremicon.com/
+    `python ipixelcli.py -a <DEVICE_MAC_ADDRESS> -c loremicon`
 - added support for randomly generated https://blurha.sh/ images
+    `python ipixelcli.py -a <DEVICE_MAC_ADDRESS> -c randhash`
 - added support for gravatar https://gravatar.com/
+    `python ipixelcli.py -a <DEVICE_MAC_ADDRESS> -c gravatar <email address>`
+- added support for PE executable icons
+    `python ipixelcli.py -a <DEVICE_MAC_ADDRESS> -c send_ico <PE EXE> <icon index>`
 
 # iPixel CLI
 
