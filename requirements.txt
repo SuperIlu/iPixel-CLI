@@ -2,3 +2,6 @@ websockets
 bleak
 pillow
 crccheck
+blurhash-python
+requests
+libgravatar

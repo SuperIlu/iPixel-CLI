@@ -6,6 +6,13 @@ import logging
 from bleak import BleakClient, BleakScanner
 from commands import *
 import bit_tools
+import io
+import random
+import math
+import blurhash
+import requests
+from libgravatar import Gravatar
+
 
 class EmojiFormatter(logging.Formatter):
     EMOJI_MAP = {
@@ -37,6 +44,76 @@ def setup_logging(use_emojis=True):
 
 logger = logging.getLogger(__name__)
 
+def gravatar(email:str):
+    g = Gravatar(email)
+    url = g.get_image(size=32)
+    logging.info(f"fetching from: {url}")
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        png_hex = resp.content.hex()
+        checksum = CRC32_checksum(png_hex)
+        size = get_frame_size(png_hex, 8)
+        return bytes.fromhex(f"{get_frame_size('FFFF020000' + size + checksum + '0065' + png_hex, 4)}020000{size}{checksum}0065{png_hex}")
+    else:
+        logging.info(f"Request failed: {resp.status_code}")
+
+
+def loremicon():
+    url = 'https://loremicon.com/32/32/hexpng'
+    logging.info(f"fetching from: {url}")
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        png_hex = resp.text
+        checksum = CRC32_checksum(png_hex)
+        size = get_frame_size(png_hex, 8)
+        return bytes.fromhex(f"{get_frame_size('FFFF020000' + size + checksum + '0065' + png_hex, 4)}020000{size}{checksum}0065{png_hex}")
+    else:
+        logging.info(f"Request failed: {resp.status_code}")
+
+def randhash():
+    rh = randomHash()
+    logging.info(f"random hash: {rh}")
+    img = blurhash.decode(rh, 32, 32)
+    bytes_io = io.BytesIO()
+    img.save(bytes_io, format='PNG')
+    img_bytes = bytes_io.getvalue()
+    png_hex = img_bytes.hex()
+    checksum = CRC32_checksum(png_hex)
+    size = get_frame_size(png_hex, 8)
+    return bytes.fromhex(f"{get_frame_size('FFFF020000' + size + checksum + '0065' + png_hex, 4)}020000{size}{checksum}0065{png_hex}")
+
+digitCharacters = [
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F",
+    "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
+    "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
+    "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "#", "$",
+    "%", "*", "+", ",", "-", ".", ":", ";", "=", "?", "@", "[", "]", "^", "_", "{",
+    "|", "}", "~"
+]
+
+
+def randomHash() -> str:
+    blurhash = digitCharacters[random.randint(0, len(digitCharacters)-1)]
+
+    sizeFlag = decode83(blurhash[0])
+    numY = math.floor(sizeFlag / 9) + 1
+    numX = (sizeFlag % 9) + 1
+    wanted = 4 + 2 * numX * numY
+
+    while len(blurhash) < wanted:
+        blurhash += digitCharacters[random.randint(0, len(digitCharacters)-1)]
+
+    return blurhash
+
+
+def decode83(str):
+    value = 0
+    for c in str:
+        digit = digitCharacters.index(c)
+        value = value * 83 + digit
+    return value
+
+
 COMMANDS = {
     "clear": clear,
     "set_brightness": set_brightness,
@@ -53,7 +130,10 @@ COMMANDS = {
     "set_orientation": set_orientation,
     "send_png": send_png,
     "led_on": led_on,
-    "led_off": led_off
+    "led_off": led_off,
+    "randhash": randhash,
+    "loremicon": loremicon,
+    "gravatar":gravatar
 }
 
 # Socket server

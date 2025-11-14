@@ -1,3 +1,8 @@
+# NOTE: SuperIlus extensions
+- added support for fetching random images from https://loremicon.com/
+- added support for randomly generated https://blurha.sh/ images
+- added support for gravatar https://gravatar.com/
+
 # iPixel CLI
 
 Python CLI rewrite of the "iPixel Color" application for LED Matrix displays manufactured by Taizhou Yumo Lighting Co., Ltd.
